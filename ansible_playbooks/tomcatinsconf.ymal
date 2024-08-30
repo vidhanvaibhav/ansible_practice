@@ -1,0 +1,70 @@
+---
+- hosts: app
+  become: yes   
+  
+  tasks: 
+  - name: install jdk
+    become: yes
+    yum: 
+      name: java-21-amazon-corretto 
+      state: present
+  - name: create tomcat group
+    become: yes 
+    group: 
+      name: tomcat 
+      state: present 
+  - name: create tomcat user
+    become: yes
+    user: 
+      name: tomcat
+      group: tomcat
+
+  - name: create installation directory for tomcat
+    become: yes
+    file:
+      dest: /opt/tomcat/apache-tomcat
+      owner: tomcat
+      group: tomcat
+      mode: "0755"
+      state: directory
+       
+  - name: download tmocat package
+    become: yes 
+    get_url: 
+      url: https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.93/bin/apache-tomcat-9.0.93.tar.gz  
+      dest: /opt/tomcat/apache-tomcat-9.0.93.tar.gz  
+  - name: unarchive tomcat package
+    unarchive: 
+      src: /opt/tomcat/apache-tomcat-9.0.93.tar.gz
+      dest: /opt/tomcat/apache-tomcat
+      mode: 0755   
+      remote_src: yes
+      group: tomcat
+      owner: tomcat 
+  - name: Create link files for Tomcat Server up
+    file: 
+      src: /opt/tomcat/apache-tomcat/apache-tomcat-9.0.93/bin/startup.sh
+      dest: /usr/local/bin/tomcatup
+      mode: "0755" 
+      state: link
+
+  - name: Create link files for Tomcat Server down
+    file:
+      src: /opt/tomcat/apache-tomcat/apache-tomcat-9.0.93/bin/shutdown.sh
+      dest: /usr/local/bin/tomcatdown
+      mode: "0755"
+      state: link
+
+  - name: configure user
+    lineinfile: 
+      path: /opt/tomcat/apache-tomcat/apache-tomcat-9.0.93/conf/tomcat-users.xml
+      line: "{{ item }}"
+      insertbefore: '</tomcat-users>'
+    loop: 
+        - '<role rolename="manager-gui"/>' 
+        - '<role rolename="manager-script"/>'
+        - '<role rolename="manager-jmx"/>'
+        - '<role rolename="manager-status"/>'
+        - '<user username="admin" password="admin" roles="manager-gui,manager-script,manager-jmx,manager-status"/>'
+        - '<user username="deployer" password="deployer" roles="manager-script"/>'
+        - '<user username="tomcat" password="s3cret" roles="manager-gui"/>'

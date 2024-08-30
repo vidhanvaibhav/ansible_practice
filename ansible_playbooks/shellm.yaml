@@ -1,0 +1,22 @@
+---
+ - hosts: app
+
+   tasks:
+     - name:  server date
+       shell: date
+       register: system_time
+     
+     - name: uptime of system
+       shell: uptime
+       register: reboot_time
+
+     - name: disk space usage
+       shell: df -hT 
+       register: disk_space
+
+     - name: printing command outputs
+       debug: 
+         msg: 
+           - "{{system_time.stdout_lines}}"
+           - "{{reboot_time.stdout_lines}}"
+           - "{{disk_space.stdout_lines}}"

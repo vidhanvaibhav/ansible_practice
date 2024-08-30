@@ -1,0 +1,19 @@
+---
+ - hosts: app
+   become: true
+   vars_prompt:
+     - name: pkg
+       prompt: please enter package to install
+
+   tasks: 
+     - name: package to install
+       yum: 
+         name: "{{ pkg }}" 
+         state: present  
+    
+     - name: start service  
+       service:
+         name: "{{ pkg }}"
+         state: started  
+              
+         

@@ -1,0 +1,4 @@
+---
+# handlers file for tomcat
+- name: start tomcat
+  shell: /usr/local/bin/tomcatup

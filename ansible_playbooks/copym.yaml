@@ -1,0 +1,58 @@
+ - hosts: app
+   tasks:
+         
+     - name: check existence of user apache
+       command: id "{{ item }}"
+       register: user_exist
+       ignore_errors: true
+       loop: 
+         - vidhan
+         - apache
+         - nginx
+
+     - name: delete if user exist
+       become: true 
+       user: 
+         name: "{{ item.item }}"
+         state: absent       
+       when: item.rc==0
+       loop: "{{ user_exist.results }}"
+
+     - name:  if user apache doesn't exist print details
+       debug: 
+         msg: user apache doesn't exist "{{ item.item }}"
+       when: item.rc!=0 
+       loop: "{{ user_exist.results }}"
+
+     - name: create user
+       become: yes
+       user: 
+         name: vidhan
+         group: ec2-user
+
+     - name: create directory
+       file:
+         dest: /home/ec2-user/test
+         mode: "0755"
+         owner: ec2-user
+         group: ec2-user
+         state: directory
+
+     - name: register to check directory existence
+       stat: 
+         path: /home/ec2-user/test
+       register: dir_stat
+
+     - name: create file if directory exist
+       file:
+         dest: /home/ec2-user/test/vidhan.txt
+         owner: ec2-user
+         group: ec2-user
+         mode: 0755
+         state: touch    
+       when: dir_stat.stat.exists    
+      
+     - name: copy file 
+       copy: 
+         src: /home/ec2-user/a.txt
+         dest: /home/ec2-user  
